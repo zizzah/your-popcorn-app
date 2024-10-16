@@ -61,7 +61,7 @@ export function useMovies(query,setSeclectedId){
             controller.abort();
           }
         },
-        [query,setSeclectedId,movies]
+        [query]
 
 
       );
