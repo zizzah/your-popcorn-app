@@ -24,7 +24,7 @@ export function useMovies(query,setSeclectedId){
     
             try {
               const response = await fetch(
-                `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,{signal:controller.signal}
+                `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`,{signal:controller.signal}
               );
     
               if (!response.ok) {
@@ -61,7 +61,7 @@ export function useMovies(query,setSeclectedId){
             controller.abort();
           }
         },
-        [query]
+        [query,setSeclectedId,movies]
 
 
       );
