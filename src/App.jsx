@@ -4,6 +4,9 @@ import { data } from "autoprefixer";
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
 import { StarRating } from "./StarRating";
+import { useMovies } from "./useMovies";
+import { useLocalStorageState } from "./useLocalStorageState";
+import { useKey } from "./useKey";
 
 const tempMovieData = [
   {
@@ -61,23 +64,15 @@ function Search({ query, setQuery }) {
   // const [query, setQuery] = useState("");
   const myRef = useRef(null)
 
-  useEffect(function(){
+  useKey("enter",function(){
+    console.log('enter')
 
-    function callBack(e){
-      if(document.activeElement === myRef.current) return 
-
-      if(e.code === "Enter"){
-        myRef.current.focus()
-        setQuery("");
-      }
-
+    if(document.activeElement === myRef.current){
+      return 
     }
-
-     document.addEventListener("keydown",callBack);
-     return ()=> document.addEventListener("keydown",callBack)
-     
-  },[setQuery])
- 
+      setQuery('')
+      myRef.current.focus()
+  })
 
   return (
     <input
@@ -277,7 +272,7 @@ useEffect(function(){
         setIsLoading(true);
         try {
           const response = await fetch(
-            `http://www.omdbapi.com/?apikey=3305d42f&i=${selectedId}`
+            `https://www.omdbapi.com/?apikey=3305d42f&i=${selectedId}`
           );
 
         
@@ -306,7 +301,10 @@ useEffect(function(){
      }
    },[title])
 
-   useEffect(function(){
+
+
+   useKey('Escape',onCloseMovie);
+/*    useEffect(function(){
      function callback(e){
         if(e.code === 'Escape'){
           onCloseMovie()
@@ -322,7 +320,7 @@ useEffect(function(){
     }
  },[onCloseMovie])
 
-  return (
+ */  return (
     <div className="details box">
       {isLoading && <Loader />}
       <header>
@@ -433,20 +431,22 @@ function ErrorMessage({ message }) {
   );
 }
 export default function App() {
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(function(){
-     const store = localStorage.getItem('watched')
-     return JSON.parse(store) || []
-  });
+
+  
+
+  const [watched,setWatched] = useLocalStorageState([],'watched')
+
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+ // const [isLoading, setIsLoading] = useState(false);
+  // const [error, setError] = useState("");
   const [selectedId, setSeclectedId] = useState(null);
 
   function handleAddWatch(movie) {
     setWatched((watched) => [...watched, movie]);
   //  localStorage.setItem('watched', JSON.stringify([...watched, movie]))
   }
+
+ const {movies,isLoading, error} = useMovies(query,setSeclectedId)
 
   function handleSelectedId(id) {
     setSeclectedId((selectedId) => (id === selectedId ? null : id));
@@ -463,62 +463,9 @@ export default function App() {
   }
 
 
-useEffect(function(){
-   localStorage.setItem('watched', JSON.stringify(watched))
 
-
-},[watched])
 
   
-  useEffect(
-    function () {
-      const controller= new AbortController()
-      async function move() {
-        setIsLoading(true);
-        setError("");
-
-        try {
-          const response = await fetch(
-            `http://www.omdbapi.com/?apikey=3305d42f&s=${query}`,{signal:controller.signal}
-          );
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (data.Response === "False") {
-            throw new Error("movie not found");
-          }
-
-          setMovies(data.Search);
-          setError('')
-        } catch (error) {
-          console.log("Error fetching data:", error.message);
-          if(error.name !== 'AbortError'){
-            setError(error.message);
-
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-      handleCloseMovi();
-      move();
-
-      return function() {
-        controller.abort();
-      }
-    },
-    [query]
-  );
-
   return (
     <>
       <NavBar>
