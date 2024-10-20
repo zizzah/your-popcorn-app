@@ -14,6 +14,7 @@ export function useMovies(query,setSeclectedId){
       }
 
 
+      
   
     useEffect(
         function () {
